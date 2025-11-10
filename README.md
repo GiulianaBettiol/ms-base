@@ -1,2 +1,1 @@
-# ms-base
-repositorio microservicio base
+# base_ms
