@@ -1,6 +1,5 @@
 
 import logging
-
 import requests
 from flask import Flask
 from tenacity import (before_sleep_log, retry, retry_if_exception_type,
@@ -25,7 +24,7 @@ logger.addHandler(console_handler)
     before_sleep=before_sleep_log(logger, logging.INFO)  
 )
 def hacer_peticion(url, data):
-    """Realiza una petición HTTP POST con reintentos."""  
+   
     try:
         logger.info(f"Enviando petición a {url} con datos: {data}")
         response = requests.post(url, json=data)
@@ -36,24 +35,24 @@ def hacer_peticion(url, data):
         raise
 
 class Action:
-    """Define una acción en la Saga, con su ejecución y compensación."""
+    
     def __init__(self, execute_fn, compensate_fn):
         self.execute_fn = execute_fn
         self.compensate_fn = compensate_fn
         self.url = None
 
     def execute(self, data):
-        """Ejecuta la acción llamando al microservicio correspondiente."""
+      
         url, response_data = self.execute_fn(data)
         self.url = url
         return url, response_data
 
     def compensate(self, id):
-        """Compensa la acción eliminando el recurso creado."""
+      
         return self.compensate_fn(id)
 
 class Saga:
-    """Orquestador de la saga: ejecuta y compensa si falla."""
+   
     def __init__(self, actions, data):
         self.actions = actions
         self.data = data
@@ -61,7 +60,7 @@ class Saga:
         self.response = {"message": "OK", "status_code": 201, "data": {"message": "Operación realizada con éxito"}}
 
     def execute(self):
-        """Ejecuta la saga en orden y maneja la compensación en caso de fallo."""
+        
         saga_data = self.data.copy()
 
         for index, action in enumerate(self.actions):
@@ -105,7 +104,7 @@ class Saga:
         return self.response
 
     def compensate(self, index):
-        """Compensa todas las acciones previas en orden inverso"""
+        
         try:
             for i in range(index - 1, -1, -1):  
                 action = self.actions[i]

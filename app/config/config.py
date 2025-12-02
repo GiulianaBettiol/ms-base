@@ -12,15 +12,16 @@ class Config:
     STOCK_URL = os.getenv('STOCK_URL')
     COMPRAS_URL = os.getenv('COMPRAS_URL')
     PRODUCTO_URL = os.getenv('PRODUCTO_URL')
-    
+    TIMEOUT_SECONDS = int(os.getenv('REQUEST_TIMEOUT', '10'))
+    VERIFY_SSL = os.getenv('FLASK_ENV') == 'production'
     @staticmethod
     def init_app(app):
-        """Método para inicializar configuraciones adicionales si es necesario."""
+       
         pass
 
     @staticmethod
     def validate_required_env_vars(env_vars):
-        """Valida que las variables de entorno críticas estén definidas."""
+        
         missing_vars = [var for var in env_vars if not os.getenv(var)]
         if missing_vars:
             raise ValueError(f"Las siguientes variables de entorno faltan o están vacías: {', '.join(missing_vars)}")

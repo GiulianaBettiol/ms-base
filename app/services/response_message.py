@@ -9,8 +9,8 @@ class ResponseMessage:
 
 @dataclass
 class ResponseBuilder:
-    message: str = None
-    status_code: int = None
+    message: str
+    status_code: int
     data: dict = None
 
     def add_message(self, message: str):

@@ -18,7 +18,7 @@ def agregar_pago_action(data):
         pago_service = PagoService()
         result = pago_service.agregar_pago(data)
         logger.info(f"devolviendo: {result[0]}, {result[1]}")
-        return result[0], result[1]  # Asegúrate de que se devuelven URL y data
+        return result[0], result[1]  
     except Exception as e:
         logger.error(f"Error en agregar pago: {e}")
         raise

@@ -1,73 +1,51 @@
+
+
 import os
 from flask import Flask
 from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
 from app.config import cache_config, factory
-import redis
-import logging
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
-import requests
-import pybreaker
-
-circuit_breaker = pybreaker.CircuitBreaker(fail_max=3, reset_timeout=30)  # Configuración: 3 fallos antes de abrir
-
-def obtener_circuit_breaker():
-    return circuit_breaker
-def retry_logic(func):
-    """
-    Aplica la lógica de retry a una función.
-    """
-    return retry(
-        retry=retry_if_exception_type(requests.RequestException),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        stop=stop_after_attempt(3),
-        reraise=True
-    )(func)
+from app.utils.logger_config import setup_logger
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+logger = setup_logger(__name__)
 
 db = SQLAlchemy()
 cache = Cache()
 
 
-redis_host = os.getenv('REDIS_HOST', 'localhost')
-redis_port = int(os.getenv('REDIS_PORT', 6379))
-redis_password = os.getenv('REDIS_PASSWORD', '')
-redis_db = int(os.getenv('REDIS_DB', 0))
-
-
-redis_client = redis.StrictRedis(
-    host=redis_host,
-    port=redis_port,
-    db=redis_db,
-    password=redis_password,
-    decode_responses=True
-)
-
-
-
-def create_app():
+def create_app() -> Flask:
+  
     app = Flask(__name__)
-    app_context = os.getenv('FLASK_ENV', 'development')
+    env = os.getenv('FLASK_ENV', 'development')
+    
+   
     try:
-        app.config.from_object(factory(app_context))
+        config_cls = factory(env)
+        app.config.from_object(config_cls)
+        logger.info(f"Configuración cargada para ambiente: {env}")
     except Exception as e:
-        raise RuntimeError(f"Error al cargar la configuración para el entorno {app_context}: {e}")
-
+        logger.error(f"Error cargando configuración para {env}: {e}")
+        raise RuntimeError(f"Error cargando configuración para {env}: {e}")
+    
+   
     try:
         db.init_app(app)
-        cache.init_app(app, config=cache_config) 
+        cache.init_app(app, config=cache_config)
+        logger.info("Extensiones inicializadas correctamente")
     except Exception as e:
-        raise RuntimeError(f"Error al inicializar extensiones: {e}")
-
-
+        logger.error(f"Error inicializando extensiones: {e}")
+        raise RuntimeError(f"Error inicializando extensiones: {e}")
     
+    # Ruta de salud
     @app.route('/ping', methods=['GET'])
     def ping():
-        return {"message": "El servicio de Base está en funcionamiento"}
-
+        """Endpoint de salud del servicio."""
+        return {"mensaje": "El servicio de Base está en funcionamiento"}
+    
     return app
+
+
+__all__ = ["create_app", "db", "cache"]
+
 
